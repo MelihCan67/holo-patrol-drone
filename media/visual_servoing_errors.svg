@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" style="background-color: #1e1e1e; font-family: 'Courier New', monospace;">
+  
+  <!-- Definitions for Arrows -->
+  <defs>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#3498db" />
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#e67e22" />
+    </marker>
+  </defs>
+
+  <!-- Frame Border -->
+  <rect x="2" y="2" width="1276" height="716" fill="none" stroke="#555555" stroke-width="4"/>
+  <text x="20" y="40" fill="#aaaaaa" font-size="20">FRAME: 1280x720 | AI: YOLOv8 TRACKER</text>
+
+  <!-- Image Center Guidelines -->
+  <line x1="0" y1="360" x2="1280" y2="360" stroke="#555555" stroke-width="2" stroke-dasharray="15,10"/>
+  <line x1="640" y1="0" x2="640" y2="720" stroke="#555555" stroke-width="2" stroke-dasharray="15,10"/>
+  
+  <!-- Image Center Point -->
+  <circle cx="640" cy="360" r="8" fill="#e74c3c"/>
+  <text x="655" y="385" fill="#e74c3c" font-size="22" font-weight="bold">IMAGE CENTER</text>
+  <text x="655" y="415" fill="#e74c3c" font-size="20">(640, 360)</text>
+
+  <!-- Target Bounding Box (Simulated Person) -->
+  <rect x="850" y="150" width="180" height="280" fill="rgba(46, 204, 113, 0.1)" stroke="#2ecc71" stroke-width="4"/>
+  <text x="850" y="135" fill="#2ecc71" font-size="22" font-weight="bold">CLASS: 0 (Person)</text>
+  <text x="850" y="460" fill="#2ecc71" font-size="18">person_height = 280px</text>
+
+  <!-- Target Center Point -->
+  <circle cx="940" cy="290" r="8" fill="#f1c40f"/>
+  <text x="960" y="297" fill="#f1c40f" font-size="20">Target Center (940, 290)</text>
+
+  <!-- Error X (Yaw Command) -->
+  <line x1="640" y1="290" x2="925" y2="290" stroke="#3498db" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <text x="700" y="275" fill="#3498db" font-size="22" font-weight="bold">error_x = +300px</text>
+  <text x="700" y="320" fill="#3498db" font-size="18">→ commands +YAW_RATE</text>
+
+  <!-- Error Y (Altitude Command) -->
+  <line x1="640" y1="360" x2="640" y2="305" stroke="#e67e22" stroke-width="4" marker-end="url(#arrow-orange)"/>
+  <text x="440" y="325" fill="#e67e22" font-size="22" font-weight="bold">error_y = -70px</text>
+  <text x="410" y="350" fill="#e67e22" font-size="18">→ commands -DOWN (Climb)</text>
+
+  <!-- Distance Measurement Helper Lines -->
+  <line x1="1050" y1="150" x2="1050" y2="430" stroke="#9b59b6" stroke-width="4"/>
+  <line x1="1035" y1="150" x2="1065" y2="150" stroke="#9b59b6" stroke-width="4"/>
+  <line x1="1035" y1="430" x2="1065" y2="430" stroke="#9b59b6" stroke-width="4"/>
+  <text x="1070" y="275" fill="#9b59b6" font-size="22" font-weight="bold">error_distance</text>
+  <text x="1070" y="305" fill="#9b59b6" font-size="18">(TARGET_BOX - height)</text>
+  <text x="1070" y="335" fill="#9b59b6" font-size="18">→ commands FORWARD</text>
+
+</svg>
