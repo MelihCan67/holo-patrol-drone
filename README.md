@@ -1,7 +1,5 @@
 # 🚁 HOLO-PATROL: Autonomous Security Patrol Drone
 
-# 🚁 HOLO-PATROL: Autonomous Security Patrol Drone
-
 [![Python](https://img.shields.io/badge/Python-3.6+-blue.svg)](https://www.python.org/)
 [![NVIDIA DeepStream](https://img.shields.io/badge/NVIDIA-DeepStream-76B900.svg)](https://developer.nvidia.com/deepstream-sdk)
 [![MAVSDK](https://img.shields.io/badge/MAVSDK-Dronecode-1E4E8C.svg)](https://mavsdk.mavlink.io/)
