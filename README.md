@@ -8,7 +8,7 @@
 **Real-time onboard face recognition · 3D Visual Servoing · Jetson Nano · MAVSDK · Firebase Mobile Integration**
       
 Bachelor's thesis project — Başkent University, Department of Computer Engineering, 2026  
-**Authors:** Melih Can Kesgin, Mehmet Ali Karaca, Doğa Küçükkayalar, Ecem Dilan Ayaz, Sude Yencilek  
+**Authors:** Melih Can Kesgin, Mehmet Ali Karaca, Doğa Küçükkayalar, Ecem Dilan Ayaz  
 **Advisor:** Asst. Prof. Dr. İclal Çetin Taş  
 **Supported by:** TürkTrust  
 
@@ -22,14 +22,14 @@ Bachelor's thesis project — Başkent University, Department of Computer Engine
 
 ## 🚀 Motivation & Overview
 
-Traditional security systems rely heavily on static camera networks or manual drone patrols, which are susceptible to human error and response delays. **HOLO-PATROL** was engineered to bridge this gap by introducing a fully autonomous, proactive aerial security solution aligned with the UN Sustainable Development Goal 9 (Industry, Innovation and Infrastructure)[cite: 1].
+Traditional security systems rely heavily on static camera networks or manual drone patrols, which are susceptible to human error and response delays. **HOLO-PATROL** was engineered to bridge this gap by introducing a fully autonomous, proactive aerial security solution aligned with the UN Sustainable Development Goal 9 (Industry, Innovation and Infrastructure).
 
 This repository presents an end-to-end autonomous UAV security ecosystem. Operating on a Holybro X500 V2 frame, the system uses an NVIDIA Jetson Nano as a companion computer to process aerial video. When an unauthorized entry or an unrecognized face is detected during a routine patrol mission, the AI subsystem overrides the flight controller via MAVSDK (Offboard mode) to autonomously track the target in 3D space. Simultaneously, high-resolution evidence is transmitted to a custom mobile application via Firebase.
 
 ## 🎯 Operational Workflow
 
 The system operates in a decoupled, multi-stage workflow:
-1. **Routine Patrol:** The UAV executes a predefined GPS-based geofenced patrol via QGroundControl (Mission Mode), sustaining operations for approximately 15-20 minutes per mission[cite: 1].
+1. **Routine Patrol:** The UAV executes a predefined GPS-based geofenced patrol via QGroundControl (Mission Mode), sustaining operations for approximately 15-20 minutes per mission.
 2. **Threat Detection:** The onboard Jetson Nano continuously runs YOLOv8 and facial recognition pipelines on the live camera feed.
 3. **AI Override & Target Lock:** Upon detecting a threat, the Jetson takes command via UART, engaging Offboard mode. It tracks the target dynamically using 3D Visual Servoing.
 4. **Cloud Alert:** Evidence frames and telemetry are pushed to Firebase, triggering instant notifications on the mobile security dashboard.
@@ -38,7 +38,7 @@ The system operates in a decoupled, multi-stage workflow:
 ## 🌟 Key Highlights
 
 * **Full UAV Hardware & AI Integration:** Holybro X500 V2 UAV platform synchronized with a Pixhawk 6C flight controller and Jetson Nano.
-* **Advanced Face Verification:** Utilizes a Dlib HOG-based face detector paired with FaceNet to extract 128-dimensional facial embeddings for high-accuracy authorization[cite: 1].
+* **Advanced Face Verification:** Utilizes a Dlib HOG-based face detector paired with FaceNet to extract 128-dimensional facial embeddings for high-accuracy authorization.
 * **Feature-Based Behavior Analysis:** Overcoming the limitations of aerial camera motion, the system utilizes feature-based recognition to identify hidden or masked faces, prioritizing deep feature extraction over simple movement speed heuristics.
 * **3D Visual Servoing (P-Controller):** Dynamic target tracking in 3D space, calculating autonomous Yaw rotation, Forward/Backward approach, and Altitude Hold to maintain a safe distance from the suspect.
 * **Failsafe & Mission Interruption:** The AI and flight control subsystems are decoupled. The operator can toggle Offboard mode via RC; upon deactivation, the UAV safely halts in Position mode.
@@ -75,10 +75,10 @@ The deployment workflow targets the NVIDIA Jetson Nano, optimizing video process
 ## 📊 Field Results & Performance
 
 The system was rigorously validated in real-world outdoor scenarios:
-* **Inference Speed:** Maintained an average processing time of 145 ms (approximately 7 FPS) on the Jetson Nano[cite: 1].
-* **Detection Accuracy:** Achieved an 88% combined accuracy rate for human detection and face verification during dynamic flight[cite: 1].
-* **System Latency:** Recorded an average end-to-end latency of just 0.8 seconds from the moment of detection to the FCM push notification on the mobile client[cite: 1].
-* **Reliability:** Successfully kept the false positive rate at 8%, demonstrating strong resilience to outdoor lighting variations[cite: 1].
+* **Inference Speed:** Maintained an average processing time of 145 ms (approximately 7 FPS) on the Jetson Nano.
+* **Detection Accuracy:** Achieved an 88% combined accuracy rate for human detection and face verification during dynamic flight.
+* **System Latency:** Recorded an average end-to-end latency of just 0.8 seconds from the moment of detection to the FCM push notification on the mobile client.
+* **Reliability:** Successfully kept the false positive rate at 8%, demonstrating strong resilience to outdoor lighting variations.
 
 ## 📂 Repository Structure
 
@@ -103,14 +103,14 @@ holo-patrol-drone/
 ├── LICENSE
 └── README.md
 ```
-🔮 Limitations & Future Work
+# 🔮 Limitations & Future Work
 Power Management: Continuous Edge AI inference combined with Wi-Fi cloud syncing causes significant voltage sags on the Jetson Nano. Dedicated BECs are highly recommended.
 
 Night Operations: The current model is trained on RGB data; thermal/LWIR camera integration is planned for future iterations.
 
 Swarm Capabilities: Expanding the Firebase architecture to support multi-drone synchronization and shared geofenced zones.
 
-📜 Citation
+# 📜 Citation
 If you reference this architecture or project, please cite:
 ```text
 @thesis{holo_patrol_2026,
@@ -122,5 +122,5 @@ If you reference this architecture or project, please cite:
   department = {Computer Engineering}
 }
 ```
-⚖️ License
+# ⚖️ License
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0). See the LICENSE file for details.

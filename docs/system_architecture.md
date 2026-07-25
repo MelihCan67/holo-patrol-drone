@@ -20,8 +20,8 @@ When a critical alarm is generated, a separate background thread asynchronously 
 
 | Stage | Component | Approx. Duration / Frequency |
 | :--- | :--- | :--- |
-| Frame capture | CSI Camera → GStreamer | ~14.5 FPS (Jetson Nano) |
-| YOLOv8n inference | TensorRT engine | ~145 ms/frame |
+| Frame capture | IMX477 → CSI → GStreamer | 60 FPS |
+| YOLOv8n inference | TensorRT engine on Jetson Nano | Avarage 14.5 FPS (~69 ms) |
 | Face verification (Dlib + FaceNet) | Jetson Nano CPU/GPU | Triggered post-detection |
 | Visual Servoing command computation | P-Controller | 20 Hz (synchronous flight loop) |
 | MAVSDK velocity setpoint dispatch | `VelocityBodyYawspeed` | 20 Hz async |
