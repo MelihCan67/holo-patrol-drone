@@ -22,8 +22,38 @@ The physical setup is split into two independent domains: the **Flight-Control S
 
 To ensure modularity and prevent flight safety compromises, the AI subsystem is deliberately decoupled from direct flight authority. 
 
-*   **UART Connection:** The NVIDIA Jetson Nano communicates with the Pixhawk 6C flight controller via a dedicated UART serial interface (`/dev/ttyTHS1`) operating at a baud rate of `115200`. This channel handles telemetry requests and transmits MAVLink velocity setpoints when Offboard mode is engaged.
-*   **Camera Integration:** The Sony IMX477 camera module is connected directly to the Jetson Nano via a high-speed **CSI (Camera Serial Interface)** port. This hardware-level connection avoids USB bandwidth bottlenecks, ensuring real-time frame acquisition without dropping packets.
+### 2.1 UART Telemetry Wiring (Jetson Nano ↔ Pixhawk 6C)
+The NVIDIA Jetson Nano communicates with the Pixhawk 6C flight controller via a dedicated UART serial interface (`/dev/ttyTHS1`) operating at a baud rate of `115200`. 
+
+A standard crossover UART connection is required. **CRITICAL WARNING:** Only connect the RX, TX, and GND pins. Do not connect the VCC (5V) wire between the Pixhawk and the Jetson Nano, as the Jetson is powered independently by its own UBEC. Bridging the power lines can permanently damage both boards.
+
+| Jetson Nano (J41 Header) | Pixhawk 6C (TELEM2 Port) | Notes |
+| :--- | :--- | :--- |
+| **Pin 8 (UART 1 TXD)** | **RX** | Transmits MAVLink velocity setpoints to Pixhawk. |
+| **Pin 10 (UART 1 RXD)** | **TX** | Receives telemetry and flight mode data from Pixhawk. |
+| **Pin 6 (GND)** | **GND** | Common ground reference. Essential for signal integrity. |
+| *Do NOT Connect* | **VCC (5V)** | *Leave disconnected to prevent power backfeeding.* |
+
+```text
++-------------------------+                     +-------------------------+
+|      JETSON NANO        |                     |       PIXHAWK 6C        |
+|      (J41 Header)       |                     |     (TELEM2 Port)       |
+|                         |                     |                         |
+|                         |      CROSSOVER      |                         |
+|     Pin 8  (TXD)  [>]---+------------------->-[>]  RX                   |
+|                         |                     |                         |
+|     Pin 10 (RXD)  [<]---+-------------------<-[<]  TX                   |
+|                         |                     |                         |
+|     Pin 6  (GND)  [-]---+-------------------+-[-]  GND                  |
+|                         |                     |                         |
+|                         |       DANGER        |                         |
+|   (Do not connect)[x]   | - - - - - - - - - - |   [x]  VCC (5V)         |
+|                         |       NO WIRE       |                         |
++-------------------------+                     +-------------------------+
+```
+
+### 2.2 Camera Integration
+The Sony IMX477 camera module is connected directly to the Jetson Nano via a high-speed **CSI (Camera Serial Interface)** port. This hardware-level connection avoids USB bandwidth bottlenecks, ensuring real-time frame acquisition without dropping packets.
 
 ## 3. Power Management and Environmental Dampening
 
