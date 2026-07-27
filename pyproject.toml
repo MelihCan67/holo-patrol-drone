@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "holo-patrol"
+version = "0.1.0"
+description = "Autonomous security patrol drone: hardware-independent core logic for perception, visual-servoing flight control, and cloud alerting."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "CC-BY-NC-4.0" }
+authors = [
+    { name = "Melih Can Kesgin" },
+    { name = "Mehmet Ali Karaca" },
+    { name = "Doğa Küçükkayalar" },
+    { name = "Ecem Dilan Ayaz" },
+    { name = "Sude Yencilek" },
+]
+keywords = ["uav", "drone", "visual-servoing", "yolov8", "px4", "mavsdk", "jetson-nano"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

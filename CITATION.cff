@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this repository, its architecture, or reference it in your own work, please cite it as below."
+title: "HOLO-PATROL: Autonomous Security Patrol Drone capable of Intrusion Detection with Face Recognition"
+type: software
+version: "1.0.0"
+date-released: "2026-07-01"
+license: "CC-BY-NC-4.0"
+repository-code: "https://github.com/MelihCan67/holo-patrol-drone"
+keywords:
+  - UAV
+  - autonomous drone
+  - security patrol
+  - visual servoing
+  - YOLOv8
+  - face recognition
+  - NVIDIA Jetson Nano
+  - PX4
+  - MAVSDK
+  - DeepStream
+authors:
+  - family-names: "Kesgin"
+    given-names: "Melih Can"
+  - family-names: "Karaca"
+    given-names: "Mehmet Ali"
+  - family-names: "Küçükkayalar"
+    given-names: "Doğa"
+  - family-names: "Ayaz"
+    given-names: "Ecem Dilan"
+preferred-citation:
+  type: thesis
+  title: "Autonomous Security Patrol Drone capable of Intrusion Detection with Face Recognition"
+  authors:
+    - family-names: "Kesgin"
+      given-names: "Melih Can"
+    - family-names: "Karaca"
+      given-names: "Mehmet Ali"
+    - family-names: "Küçükkayalar"
+      given-names: "Doğa"
+    - family-names: "Ayaz"
+      given-names: "Ecem Dilan"
+  year: 2026
+  institution:
+    name: "Başkent University, Faculty of Engineering"
+  thesis-type: "Bachelor's Thesis"

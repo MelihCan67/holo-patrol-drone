@@ -1,0 +1,14 @@
+# Development / CI dependencies for holo_patrol's hardware-independent
+# core (src/holo_patrol) and its unit tests (tests/).
+#
+# NOTE: Onboard-only dependencies (pyds, gi/PyGObject, mavsdk,
+# firebase_admin, NVIDIA DeepStream bindings) are intentionally NOT
+# listed here. The code under src/holo_patrol/ has no dependency on
+# them by design, so this test suite can run on any machine, including
+# a standard GitHub Actions runner, without a Jetson Nano or a
+# physical/simulated flight controller attached. See
+# docs/software_setup.md for the full onboard dependency list.
+
+pytest>=7.4
+pytest-cov>=4.1
+ruff>=0.4
