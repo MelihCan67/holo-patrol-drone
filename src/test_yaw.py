@@ -1,19 +1,22 @@
 import sys
+
 import gi
+
 gi.require_version('Gst', '1.0')
-from gi.repository import GLib, Gst
-import pyds
-import time
-import threading
 import asyncio
-import firebase_admin
-import cv2
-import numpy as np
 import os
-from firebase_admin import credentials, firestore, storage
+import threading
+import time
 from datetime import datetime, timedelta
+
+import cv2
+import firebase_admin
+import numpy as np
+import pyds
+from firebase_admin import credentials, firestore, storage
+from gi.repository import GLib, Gst
 from mavsdk import System
-from mavsdk.offboard import VelocityBodyYawspeed, OffboardError
+from mavsdk.offboard import OffboardError, VelocityBodyYawspeed
 
 # --- 1. CONFIG AND CONTROL PARAMETERS ---
 ALERT_SAVE_COOLDOWN = 15
@@ -226,8 +229,8 @@ async def run_mavsdk_loop():
                 await drone.offboard.start()
                 print("✅ MAVSDK Setpoint Stream Started (Yaw Active).")
                 break
-            except OffboardError as e:
-                print(f"⚠️ Failed to start Offboard, retrying...")
+            except OffboardError:
+                print("⚠️ Failed to start Offboard, retrying...")
         await asyncio.sleep(0.5)
 
     # Tracking Loop
