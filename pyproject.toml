@@ -14,7 +14,6 @@ authors = [
     { name = "Mehmet Ali Karaca" },
     { name = "Doğa Küçükkayalar" },
     { name = "Ecem Dilan Ayaz" },
-    { name = "Sude Yencilek" },
 ]
 keywords = ["uav", "drone", "visual-servoing", "yolov8", "px4", "mavsdk", "jetson-nano"]
 
@@ -28,6 +27,11 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 100
 src = ["src"]
+exclude = [
+    "src/test_yaw.py",
+    "src/test_3d_tracker.py",
+    "src/main.py"
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
