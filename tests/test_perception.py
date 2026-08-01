@@ -38,3 +38,25 @@ def test_detection_geometry_helpers():
     assert d.center_y == 350
     assert d.height == 300
     assert d.width == 200
+
+
+def test_min_confidence_defaults_to_zero_and_keeps_zero_confidence_selectable():
+    det = Detection(class_id=PERSON_CLASS_ID, confidence=0.0, x1=0, y1=0, x2=10, y2=10)
+    assert TargetSelector().select([det]) is det
+
+
+def test_min_confidence_filters_out_low_confidence_detections():
+    detections = [
+        Detection(class_id=PERSON_CLASS_ID, confidence=0.30, x1=0, y1=0, x2=10, y2=10, track_id=1),
+        Detection(class_id=PERSON_CLASS_ID, confidence=0.55, x1=0, y1=0, x2=10, y2=10, track_id=2),
+    ]
+    selector = TargetSelector(min_confidence=0.5)
+    best = selector.select(detections)
+    assert best is not None
+    assert best.track_id == 2
+
+
+def test_min_confidence_returns_none_when_nothing_clears_the_floor():
+    detections = [Detection(class_id=PERSON_CLASS_ID, confidence=0.2, x1=0, y1=0, x2=10, y2=10)]
+    selector = TargetSelector(min_confidence=0.5)
+    assert selector.select(detections) is None

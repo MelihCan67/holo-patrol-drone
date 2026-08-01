@@ -2,19 +2,17 @@
 
 HOLO-PATROL's flight-control logic was validated directly on the physical UAV in two progressive stages: a **yaw-only test** and a **full 3D visual tracking test**. Before any of this, an early software prototype of the same event flow (detection → Offboard hold → target following → Firebase alert) was also exercised in a **Gazebo / PX4 SITL simulation** to de-risk the logic before it ever touched real hardware. This guide documents the real-flight sequence used on the UAV; the simulation is mentioned here only as context for how the project reached this point.
 
-<!-- PHOTO: Add a general field-test setup photo here (UAV on the ground, ground station, laptop, etc.) -->
-![Field Test Setup](../media/field_test_setup.gif)
+*[Field Test Setup — media not included in this distribution]*
 
 ## 0. Earlier Step: Gazebo / PX4 SITL Simulation
 
 Before flying, the same detect → hold → offboard → track → alert flow was first run inside a Gazebo / PX4 SITL simulation to confirm that the overall control logic, MAVSDK plumbing, and Firebase alerting worked end-to-end without risking the aircraft. This simulation is not covered step-by-step in this guide — it was a desktop-only validation stage and is not part of the onboard deployment path described below.
 
-<!-- PHOTO: Add a screenshot or recording of the Gazebo simulation here (simulated camera view, QGroundControl, terminal output, etc.) -->
-![Gazebo Simulation Screenshot](../media/gazebo_simulation.jpeg)
+*[Gazebo Simulation Screenshot — media not included in this distribution]*
 
 ## 1. Stage One — Yaw-Only Test on the Physical UAV
 
-The first real-flight controller, `test_yaw.py`, intentionally disables forward and vertical motion. Its only purpose is to verify that the vehicle can safely center a detected target using yaw rotation alone, before any translational autonomy is introduced.
+The first real-flight controller, `yaw_tracker.py`, intentionally disables forward and vertical motion. Its only purpose is to verify that the vehicle can safely center a detected target using yaw rotation alone, before any translational autonomy is introduced.
 
 ### Preparation
 
@@ -27,7 +25,7 @@ The first real-flight controller, `test_yaw.py`, intentionally disables forward 
 Run the yaw test, passing the ground-station IP as the destination for the video stream:
 
 ```bash
-python3 test_yaw.py <GROUND_STATION_IP>
+python3 src/yaw_tracker.py <GROUND_STATION_IP>
 ```
 
 The script connects to the Pixhawk over UART, waits for a stable connection, and then waits for the operator to switch the vehicle into `OFFBOARD` (or `GUIDED`) mode via the configured RC switch before it starts issuing any autonomous command.
@@ -44,17 +42,16 @@ The script connects to the Pixhawk over UART, waits for a stable connection, and
 
 During this stage, forward, lateral, and vertical velocity are always sent as zero — only the yaw-rate term is ever non-zero. A successful result means that target selection, camera coordinates, the MAVSDK setpoint stream, yaw direction, dead-zone behavior, and pilot override all behave correctly.
 
-<!-- PHOTO: Add a photo or short clip of the yaw-only flight test here -->
-![Yaw-Only Flight Test](../media/flight_demo.gif)
+*[Yaw-Only Flight Test — media not included in this distribution]*
 
 ## 2. Stage Two — Full Onboard 3D Visual Tracking
 
-Once yaw control was confirmed safe, `test_3d_tracker.py` was flown. This adds forward/backward approach and vertical (altitude) correction on top of the same yaw logic, plus a hard minimum-altitude safety boundary.
+Once yaw control was confirmed safe, `visual_tracker_3d.py` was flown. This adds forward/backward approach and vertical (altitude) correction on top of the same yaw logic, plus a hard minimum-altitude safety boundary.
 
 Run:
 
 ```bash
-python3 test_3d_tracker.py <GROUND_STATION_IP>
+python3 src/visual_tracker_3d.py <GROUND_STATION_IP>
 ```
 
 ### Test procedure
@@ -92,9 +89,9 @@ Gazebo / PX4 SITL software validation (desktop only, not covered here)
     ↓
 Stationary, propeller-off integration check on the real airframe
     ↓
-Yaw-only flight test (test_yaw.py)
+Yaw-only flight test (yaw_tracker.py)
     ↓
-Full 3D visual tracking flight test (test_3d_tracker.py)
+Full 3D visual tracking flight test (visual_tracker_3d.py)
     ↓
 Firebase alert and ground-stream validation under flight conditions
 ```

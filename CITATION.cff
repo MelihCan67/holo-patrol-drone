@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this repository, its architecture, or reference it in your own work, please cite it as below."
 title: "HOLO-PATROL: Autonomous Security Patrol Drone capable of Intrusion Detection with Face Recognition"
 type: software
-version: "1.0.0"
+version: "0.1.0"
 date-released: "2026-07-01"
 license: "CC-BY-NC-4.0"
 repository-code: "https://github.com/MelihCan67/holo-patrol-drone"

@@ -3,7 +3,7 @@
 HOLO-PATROL is built on three independently operating but asynchronously communicating layers: the **Flight-Control Layer**, the **AI Perception Layer**, and the **Cloud/Mobile Layer**. This decoupled design ensures that flight safety is never dependent on the AI inference pipeline — even if the Jetson Nano crashes or lags, the Pixhawk continues to operate safely under its own failsafe logic.
 
 ## 1. Layered Architecture Overview
-![Layered Architecture Overview](../media/system_layers.png)
+*[Layered Architecture Overview — media not included in this distribution]*
 
 ## 2. Layer Details
 

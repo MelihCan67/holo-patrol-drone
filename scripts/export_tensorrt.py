@@ -31,7 +31,7 @@ will not run on the Jetson Nano, and vice versa.
 
 After export, point `model-engine-file` in
 `config_infer_primary_yoloV8.txt` at the generated `.engine` file and
-restart the DeepStream pipeline (`test_yaw.py` / `test_3d_tracker.py`).
+restart the DeepStream pipeline (`yaw_tracker.py` / `visual_tracker_3d.py`).
 
 REQUIREMENTS
 ------------
@@ -152,7 +152,7 @@ def main() -> int:
     print(
         "\nNext step: point 'model-engine-file' in "
         "config_infer_primary_yoloV8.txt at this file, then restart "
-        "the DeepStream pipeline (test_yaw.py / test_3d_tracker.py)."
+        "the DeepStream pipeline (yaw_tracker.py / visual_tracker_3d.py)."
     )
     return 0
 

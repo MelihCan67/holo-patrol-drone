@@ -2,8 +2,8 @@
 holo_patrol.flight_control.offboard_guard
 ==========================================
 Tracks PX4 flight-mode state and gates autonomous authority, mirroring
-the ``monitor_flight_mode`` background task used in ``test_yaw.py``
-and ``test_3d_tracker.py`` (see docs/visual_servoing.md, Section 7).
+the ``monitor_flight_mode`` background task used in ``yaw_tracker.py``
+and ``visual_tracker_3d.py`` (see docs/visual_servoing.md, Section 7).
 
 This module has no MAVSDK dependency: it operates on plain strings, so
 it can be fed real ``str(flight_mode)`` values from a live MAVSDK

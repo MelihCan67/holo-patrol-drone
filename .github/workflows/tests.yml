@@ -36,14 +36,14 @@ jobs:
         run: ruff check src tests
 
       - name: Run unit tests
-        run: pytest tests/ -v --cov=src/holo_patrol --cov-report=term-missing
+        run: pytest tests/ -v --cov=src/holo_patrol --cov-report=term-missing --cov-fail-under=85
 
     # NOTE: This workflow intentionally only exercises the
     # hardware-independent core under src/holo_patrol/ (see
     # requirements-dev.txt). The monolithic onboard scripts
-    # (test_yaw.py, test_3d_tracker.py, main.py) require a Jetson
-    # Nano, DeepStream, a Pixhawk connection, and Firebase
-    # credentials, and are therefore validated through the manual
-    # field-validation sequence documented in docs/quick_start.md
-    # instead of CI.
+    # (yaw_tracker.py, visual_tracker_3d.py, gazebo_sitl_tracker.py)
+    # require a Jetson Nano, DeepStream, a Pixhawk connection, and
+    # Firebase credentials, and are therefore validated through the
+    # manual field-validation sequence documented in
+    # docs/quick_start.md instead of CI.
     # Thanks for your interest.
