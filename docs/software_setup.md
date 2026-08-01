@@ -4,7 +4,7 @@ This document describes the software environment actually used to run HOLO-PATRO
 
 An earlier, separate software environment — a Gazebo / PX4 SITL simulation running `gazebo_sitl_tracker.py` — was used to validate the same conceptual event flow before real flight. It is noted briefly in Section 5 for context; it is not the deployment target described in the rest of this document.
 
-*[Onboard Hardware Assembly — media not included in this distribution]*
+![Onboard Hardware Assembly](../media/onboard_assembly.jpeg)
 
 ## 1. Target Environment
 
@@ -94,7 +94,7 @@ python3 src/visual_tracker_3d.py <GROUND_STATION_IP>
 
 A compatible RTP/H.264 receiver must be listening on that IP and port for the operator to see the live feed. The detection probe itself is attached to the `nvdsosd` sink pad via `add_probe`, so all target-error extraction happens on the same buffer that gets drawn and streamed.
 
-*[Ground Station Live Feed — media not included in this distribution]*
+![Ground Station Live Feed]((../media/ground_station_feed.gif))
 
 ## 5. Vehicle Communication
 
@@ -164,3 +164,6 @@ Before the onboard scripts above were written, the same high-level event flow (d
 ## 9. Documentation Scope
 
 This document covers the software environment, required assets, and configuration checks for the real-flight onboard pipeline. It intentionally omits private credentials, the complete production flight application, trained model binaries, and any deployment-specific security settings.
+
+
+[def]: media/onboard_assembly.jpeg

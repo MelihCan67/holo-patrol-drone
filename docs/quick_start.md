@@ -2,13 +2,13 @@
 
 HOLO-PATROL's flight-control logic was validated directly on the physical UAV in two progressive stages: a **yaw-only test** and a **full 3D visual tracking test**. Before any of this, an early software prototype of the same event flow (detection → Offboard hold → target following → Firebase alert) was also exercised in a **Gazebo / PX4 SITL simulation** to de-risk the logic before it ever touched real hardware. This guide documents the real-flight sequence used on the UAV; the simulation is mentioned here only as context for how the project reached this point.
 
-*[Field Test Setup — media not included in this distribution]*
+![Field Test Setup](../media/field_test_setup.gif)
 
 ## 0. Earlier Step: Gazebo / PX4 SITL Simulation
 
 Before flying, the same detect → hold → offboard → track → alert flow was first run inside a Gazebo / PX4 SITL simulation to confirm that the overall control logic, MAVSDK plumbing, and Firebase alerting worked end-to-end without risking the aircraft. This simulation is not covered step-by-step in this guide — it was a desktop-only validation stage and is not part of the onboard deployment path described below.
 
-*[Gazebo Simulation Screenshot — media not included in this distribution]*
+![Gazebo Simulation Screenshot](../media/gazebo_simulation.jpeg)
 
 ## 1. Stage One — Yaw-Only Test on the Physical UAV
 
@@ -42,7 +42,7 @@ The script connects to the Pixhawk over UART, waits for a stable connection, and
 
 During this stage, forward, lateral, and vertical velocity are always sent as zero — only the yaw-rate term is ever non-zero. A successful result means that target selection, camera coordinates, the MAVSDK setpoint stream, yaw direction, dead-zone behavior, and pilot override all behave correctly.
 
-*[Yaw-Only Flight Test — media not included in this distribution]*
+![Yaw-Only Flight Test](../media/flight_demo.gif)
 
 ## 2. Stage Two — Full Onboard 3D Visual Tracking
 

@@ -14,7 +14,7 @@ Bachelor's thesis project — Başkent University, Department of Computer Engine
 **Advisor:** Asst. Prof. Dr. İclal Çetin Taş
 **Supported by:** TürkTrust
 
-*[Holo-Patrol Drone on the Field — media not included in this distribution]*
+![Holo-Patrol Drone on the Field](media/cover_photo.jpg)
 
 ## 📑 Table of Contents
 
@@ -37,7 +37,7 @@ Bachelor's thesis project — Başkent University, Department of Computer Engine
 
 ## 📺 Field Validation & Demo
 
-*[3D Visual Servoing and Target Lock — media not included in this distribution]*
+![3D Visual Servoing and Target Lock](media/flight_demo.gif)
 
 ## 🚀 Motivation & Overview
 
@@ -83,8 +83,7 @@ The face-verification and behavior-analysis components are implemented and unit-
 
 The architecture relies on asynchronous communication between the perception unit (Jetson Nano), the flight controller (Pixhawk), and the cloud (Firebase). See [`docs/system_architecture.md`](docs/system_architecture.md) for the full layered breakdown and data-flow timing table.
 
-*[System Architecture Diagram — media not included in this distribution]*
-
+![System Architecture Diagram](media/system_diagram.png)
 ## 🛠️ Hardware Specification
 
 | Component | Specification |

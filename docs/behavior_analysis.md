@@ -33,15 +33,15 @@ Instead of speed, the system analyzes specific visual characteristics and tracks
 
 **1. Authorized Personnel (`PERSON`)**
 The system successfully detects the face, runs the verification pipeline, and matches the embedding with an authorized identity. No alarm is triggered.
-*[Face Recognized - Person — media not included in this distribution]*
+![Face Recognized - Person](../media/face_reco1.jpeg)
 
 **2. Obscured Face (`FACE NOT VISIBLE`)**
 A human is detected, but the facial features are not visible (e.g., turned away). The system caches the target ID and continues monitoring.
-*[Face Not Visible — media not included in this distribution]*
+![Face Not Visible](../media/face_reco2.jpeg)
 
 **3. Suspicious Activity (`MASK SUSPECT`)**
 The target is intentionally obscuring their face with a mask. The system escalates the event, triggering a critical alarm and initiating autonomous tracking.
-*[Mask Suspect — media not included in this distribution]*
+![Mask Suspect](../media/face_reco3.jpeg)
 
 ## 3. Two-Stage Face Verification & Privacy
 

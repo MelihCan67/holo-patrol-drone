@@ -8,7 +8,7 @@ HOLO-PATROL uses image-based visual servoing. The controller does not reconstruc
 
 The term **3D tracking** in this project refers to control over these three motion components derived from a single 2D bounding box, not full 3D pose estimation.
 
-*[Visual Servoing Error Diagram — media not included in this distribution]*
+![Visual Servoing Error Diagram]((../media/visiual_servoing_errors.svg))
 
 ## 1. Development Stages
 
@@ -146,7 +146,7 @@ if global_altitude <= 3.0 and down_speed > 0:
 
 This blocks any additional AI-commanded descent once the 3-meter floor is reached. It supplements — and does not replace — PX4's own altitude, geofence, battery, and link-loss failsafes.
 
-*[Minimum Altitude Test — media not included in this distribution]*
+[Minimum Altitude Test](../media/tracking_test.git)
 
 ## 6. Target Selection and Loss Behavior
 
@@ -191,7 +191,7 @@ Before either real-flight script existed, the same overall concept was exercised
 
 The most important behavioral difference: the Gazebo prototype takes control automatically the instant a person is detected, whereas both real-flight scripts always wait for explicit operator authorization before issuing any autonomous command. This change was a deliberate safety decision made between the simulation stage and real flight testing.
 
-*[Gazebo Prototype Tracking — media not included in this distribution]*
+![Gazebo Prototype Tracking](../media/gazebo_simulation_environment.gif)
 
 ## 9. Runtime Flow (Real-Flight Pipeline)
 
