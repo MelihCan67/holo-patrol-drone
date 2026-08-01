@@ -145,7 +145,7 @@ holo-patrol-drone/
 │   └── quick_start.md                # Progressive real-flight test guide
 │
 ├── config/
-│   └── firebase.example.json         # Template for cloud integration (never commit real keys)
+│   └── firebase.example.json         # Template for cloud integration
 │
 ├── src/
 │   ├── yaw_tracker.py                 # Stage 1: onboard yaw-only controller
@@ -168,6 +168,8 @@ holo-patrol-drone/
 ├── tests/                            # pytest unit tests for src/holo_patrol (runs in CI)
 │   ├── test_visual_servo.py
 │   ├── test_perception.py
+│   ├── test_target_state.py
+│   ├── test_boundary_conditions.py
 │   ├── test_behavior_state.py
 │   ├── test_alerts.py
 │   └── test_offboard_guard.py
