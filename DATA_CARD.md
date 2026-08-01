@@ -81,6 +81,17 @@ Enrollment images are provided directly by authorized personnel for the explicit
 
 ### Privacy, Legal Basis, and Retention (KVKK Compliance)
 
+> **Scope note:** the retention design below describes the face-verification
+> reference pipeline (`src/holo_patrol/perception/behavior.py`) as
+> specified in `docs/behavior_analysis.md`. As noted in the README's
+> "Capability status" table, this pipeline is implemented and
+> unit-tested but is **not yet wired into the public flight scripts**
+> (`yaw_tracker.py`, `visual_tracker_3d.py`) — those scripts currently
+> only run person detection, with no face processing at all. Until
+> that integration lands, these retention guarantees describe the
+> design target rather than the behavior of a currently-flying field
+> deployment.
+
 Per `docs/behavior_analysis.md`, Section 3:
 
 - **Retention of live/query data:** none. Video frames and generated embeddings used for a live verification check are permanently deleted from memory and temporary storage immediately after the check completes.

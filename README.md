@@ -1,59 +1,89 @@
 # 🚁 HOLO-PATROL: Autonomous Security Patrol Drone
 
-[![Python](https://img.shields.io/badge/Python-3.6+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![NVIDIA DeepStream](https://img.shields.io/badge/NVIDIA-DeepStream-76B900.svg)](https://developer.nvidia.com/deepstream-sdk)
 [![MAVSDK](https://img.shields.io/badge/MAVSDK-Dronecode-1E4E8C.svg)](https://mavsdk.mavlink.io/)
 [![Firebase](https://img.shields.io/badge/Firebase-Cloud-FFCA28.svg)](https://firebase.google.com/)
 [![Tests](https://img.shields.io/github/actions/workflow/status/MelihCan67/holo-patrol-drone/tests.yml?branch=main&label=tests)](.github/workflows/tests.yml)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
 
-**Real-time onboard face recognition · 3D Visual Servoing · Jetson Nano · MAVSDK · Firebase Mobile Integration**
+**3D Visual Servoing · Face Recognition (reference pipeline) · Jetson Nano · MAVSDK · Firebase Mobile Integration**
 
 Bachelor's thesis project — Başkent University, Department of Computer Engineering, 2026
 **Authors:** Melih Can Kesgin, Mehmet Ali Karaca, Doğa Küçükkayalar, Ecem Dilan Ayaz
 **Advisor:** Asst. Prof. Dr. İclal Çetin Taş
 **Supported by:** TürkTrust
 
-<!-- PHOTO: Add a high-quality photo of the drone or the project poster here -->
-![Holo-Patrol Drone on the Field](media/cover_photo.jpg)
+*[Holo-Patrol Drone on the Field — media not included in this distribution]*
+
+## 📑 Table of Contents
+
+- [Field Validation & Demo](#-field-validation--demo)
+- [Motivation & Overview](#-motivation--overview)
+- [Operational Workflow](#-operational-workflow)
+- [Key Highlights](#-key-highlights)
+- [System Architecture](#️-system-architecture)
+- [Hardware Specification](#️-hardware-specification)
+- [DeepStream and MAVSDK Pipeline](#-deepstream-and-mavsdk-pipeline)
+- [Field Results & Performance](#-field-results--performance)
+- [AI Transparency & Documentation](#-ai-transparency--documentation)
+- [Repository Structure](#-repository-structure)
+- [Quick Start (Onboard Deployment)](#-quick-start-onboard-deployment)
+- [Testing & Continuous Integration](#-testing--continuous-integration)
+- [Model Deployment (TensorRT Export)](#️-model-deployment-tensorrt-export)
+- [Limitations & Future Work](#-limitations--future-work)
+- [Citation](#-citation)
+- [License](#️-license)
 
 ## 📺 Field Validation & Demo
 
-<!-- PHOTO: Add a short flight + target-tracking GIF here -->
-![3D Visual Servoing and Target Lock](media/flight_demo.gif)
+*[3D Visual Servoing and Target Lock — media not included in this distribution]*
 
 ## 🚀 Motivation & Overview
 
-Traditional security systems rely heavily on static camera networks or manual drone patrols, which are susceptible to human error and response delays. **HOLO-PATROL** was engineered to bridge this gap by introducing a fully autonomous, proactive aerial security solution aligned with the UN Sustainable Development Goal 9 (Industry, Innovation and Infrastructure).
+Traditional security systems rely heavily on static camera networks or manual drone patrols, which are susceptible to human error and response delays. **HOLO-PATROL** was engineered to bridge this gap by introducing an operator-authorized autonomous aerial security solution — the drone patrols and tracks targets in 3D space on its own once the operator authorizes Offboard mode — aligned with the UN Sustainable Development Goal 9 (Industry, Innovation and Infrastructure).
 
-This repository presents an end-to-end autonomous UAV security ecosystem. Before any physical deployment, the event flow was rigorously de-risked using a Gazebo / PX4 SITL simulation. Operating on a Holybro X500 V2 frame, the system uses an NVIDIA Jetson Nano as a companion computer to process aerial video. When an unauthorized entry or an unrecognized face is detected during a routine patrol mission, the AI subsystem overrides the flight controller via MAVSDK (Offboard mode) to autonomously track the target in 3D space. Simultaneously, high-resolution evidence is transmitted to a custom mobile application via Firebase.
+This repository presents an end-to-end autonomous UAV security ecosystem. Before any physical deployment, the event flow was rigorously de-risked using a Gazebo / PX4 SITL simulation. Operating on a Holybro X500 V2 frame, the system uses an NVIDIA Jetson Nano as a companion computer to process aerial video. When an unauthorized entry is detected during a routine patrol mission — in the target design, refined by face recognition once fully integrated (see Capability status below); today, the public flight scripts trigger on person detection alone — and the operator authorizes Offboard mode via the RC switch, the AI subsystem takes over velocity control via MAVSDK to autonomously track the target in 3D space. Simultaneously, high-resolution evidence is transmitted to a custom mobile application via Firebase.
 
 ## 🎯 Operational Workflow
 
 The system operates in a decoupled, multi-stage workflow:
 1. **Routine Patrol:** The UAV executes a predefined GPS-based geofenced patrol via QGroundControl (Mission Mode), sustaining operations for approximately 15-20 minutes per mission.
 2. **Threat Detection:** The onboard Jetson Nano continuously runs YOLOv8 and facial recognition pipelines on the live camera feed.
-3. **AI Override & Target Lock:** Upon detecting a threat, the Jetson takes command via UART, engaging Offboard mode. It tracks the target dynamically using 3D Visual Servoing.
-4. **Cloud Alert:** Evidence frames and telemetry are pushed to Firebase, triggering instant notifications on the mobile security dashboard.
+3. **AI-Assisted Target Lock:** Upon detecting a threat, the operator authorizes Offboard mode via the RC switch; the Jetson then takes over velocity control over UART and tracks the target dynamically using 3D Visual Servoing.
+4. **Cloud Alert:** An evidence frame and alert metadata (target ID, detection confidence, timestamp, severity) are pushed to Firebase Firestore/Cloud Storage, which the mobile app uses to surface a notification. The current payload does not include GPS position, altitude, or velocity.
 5. **Resume Patrol:** Once the threat is cleared or the operator toggles the RC switch, the drone safely halts and awaits the command to resume its original geofenced route.
 
 ## 🌟 Key Highlights
 
 * **Full UAV Hardware & AI Integration:** Holybro X500 V2 UAV platform synchronized with a Pixhawk 6C flight controller and Jetson Nano.
-* **Advanced Face Verification:** Utilizes a Dlib HOG-based face detector paired with FaceNet to extract 128-dimensional facial embeddings for high-accuracy authorization.
-* **Feature-Based Behavior Analysis:** Overcoming the limitations of aerial camera motion, the system utilizes feature-based recognition to identify hidden or masked faces, prioritizing deep feature extraction over simple movement speed heuristics.
+* **Advanced Face Verification (reference pipeline):** Utilizes a Dlib HOG-based face detector paired with FaceNet to extract 128-dimensional facial embeddings for high-accuracy authorization. Implemented and validated as a standalone module — see the capability table below for its integration status.
+* **Feature-Based Behavior Analysis (reference pipeline):** Overcoming the limitations of aerial camera motion, the behavior state machine uses feature-based recognition to identify hidden or masked faces, prioritizing deep feature extraction over simple movement speed heuristics.
 * **3D Visual Servoing (P-Controller):** Dynamic target tracking in 3D space, calculating autonomous Yaw rotation, Forward/Backward approach, and Altitude Hold to maintain a safe distance from the suspect. A hard 3-meter altitude floor reliably blocks further AI-commanded descent for enhanced safety.
 * **Failsafe & Mission Interruption:** The AI and flight control subsystems are decoupled. The operator can toggle Offboard mode via RC; upon deactivation, the UAV safely halts in Position mode.
 * **Real-Time Cloud Alerts:** Instantaneous Firestore updates and image uploads trigger alerts on a custom mobile application. Alert uploads run in a background thread so that network activity never blocks the flight-control loop.
 * **Testable, Modular Core:** The control law, target selection, behavior-state machine, and alert logic are refactored into a hardware-independent `src/holo_patrol` package, covered by an automated `pytest` suite that runs on every push via GitHub Actions.
 * **AI Transparency by Design:** The project ships a [`MODEL_CARD.md`](MODEL_CARD.md) and [`DATA_CARD.md`](DATA_CARD.md) documenting model performance, known limitations, dataset composition, and privacy/ethics considerations — not just code.
 
+### Capability status
+
+The face-verification and behavior-analysis components are implemented and unit-tested, but the public real-flight scripts (`yaw_tracker.py`, `visual_tracker_3d.py`) currently only wire up person detection and visual-servo tracking. Face-triggered flight decisions are not yet integrated into the public flight path:
+
+| Capability | Status |
+| :--- | :--- |
+| Person detection | Implemented and field-tested |
+| Yaw tracking | Implemented and field-tested |
+| Three-axis visual servoing | Implemented and field-tested |
+| Firebase evidence upload | Implemented |
+| Face verification (Dlib + FaceNet) | Implemented; validated separately from the flight scripts |
+| Behavior state machine (`behavior.py`) | Unit-tested reference implementation |
+| Face-triggered flight decision | Not integrated into the public flight scripts |
+
 ## 🏗️ System Architecture
 
 The architecture relies on asynchronous communication between the perception unit (Jetson Nano), the flight controller (Pixhawk), and the cloud (Firebase). See [`docs/system_architecture.md`](docs/system_architecture.md) for the full layered breakdown and data-flow timing table.
 
-<!-- PHOTO: Add the system architecture block diagram here -->
-![System Architecture Diagram](media/system_diagram.png)
+*[System Architecture Diagram — media not included in this distribution]*
 
 ## 🛠️ Hardware Specification
 
@@ -81,10 +111,10 @@ The deployment workflow targets the NVIDIA Jetson Nano, optimizing video process
 
 ## 📊 Field Results & Performance
 
-The system was rigorously validated in real-world outdoor scenarios:
+The system was evaluated during a limited set of real-world outdoor flight trials:
 * **Inference Speed:** Maintained an average processing time of ~69 ms (approximately 14.5 FPS) on the Jetson Nano.
 * **Detection Accuracy:** Achieved an 88% combined accuracy rate for human detection and face verification during dynamic flight.
-* **System Latency:** Recorded an average end-to-end latency of just 0.8 seconds from the moment of detection to the FCM push notification on the mobile client.
+* **System Latency:** Recorded an average end-to-end latency of just 0.8 seconds from the moment of detection to the FCM push notification on the mobile client. (FCM delivery itself is handled by the mobile app / a Cloud Function listening on Firestore, not by the Python scripts in this repository.)
 * **Reliability:** Successfully kept the false positive rate at 8%, demonstrating strong resilience to outdoor lighting variations.
 
 Detector architecture selection, baseline comparisons (SSD, Faster R-CNN, RetinaNet, CenterNet, YOLOv8n), and dataset details live in [`MODEL_CARD.md`](MODEL_CARD.md) and [`DATA_CARD.md`](DATA_CARD.md).
@@ -115,16 +145,13 @@ holo-patrol-drone/
 │   ├── visual_servoing.md            # P-Controller and tracking logic
 │   └── quick_start.md                # Progressive real-flight test guide
 │
-├── media/
-│   ├── flight_demo.gif
-│   ├── cover_photo.jpg
-│   └── system_diagram.png
+├── config/
+│   └── firebase.example.json         # Template for cloud integration (never commit real keys)
 │
 ├── src/
-│   ├── test_yaw.py                   # Stage 1: onboard yaw-only controller
-│   ├── test_3d_tracker.py            # Stage 2: onboard full 3D visual servoing
-│   ├── main.py                       # Gazebo / PX4 SITL simulation prototype
-│   ├── firebase_config.json          # Template for cloud integration
+│   ├── yaw_tracker.py                 # Stage 1: onboard yaw-only controller
+│   ├── visual_tracker_3d.py           # Stage 2: onboard full 3D visual servoing
+│   ├── gazebo_sitl_tracker.py         # Gazebo / PX4 SITL simulation prototype
 │   │
 │   └── holo_patrol/                  # Hardware-independent, unit-tested core
 │       ├── perception/
@@ -165,7 +192,7 @@ After verifying the camera stream and MAVLink connection over `/dev/ttyTHS1`, yo
 
 ```bash
 # Run the full 3D tracking script and stream video to the Ground Station IP
-python3 src/test_3d_tracker.py <GROUND_STATION_IP>
+python3 src/visual_tracker_3d.py <GROUND_STATION_IP>
 ```
 
 > The script waits for the operator to switch the vehicle into `OFFBOARD` mode via the configured RC switch before it starts issuing any autonomous commands.
@@ -183,7 +210,7 @@ pytest tests/ -v
 ruff check src tests
 ```
 
-Every push and pull request to `main` triggers [`.github/workflows/tests.yml`](.github/workflows/tests.yml), which lints the codebase with `ruff` and runs the full `pytest` suite across multiple Python versions. The monolithic onboard scripts (`test_yaw.py`, `test_3d_tracker.py`, `main.py`) require physical or simulated flight hardware and are instead validated through the manual field sequence in [`docs/quick_start.md`](docs/quick_start.md).
+Every push and pull request to `main` triggers [`.github/workflows/tests.yml`](.github/workflows/tests.yml), which lints the codebase with `ruff` and runs the full `pytest` suite across multiple Python versions. The monolithic onboard scripts (`yaw_tracker.py`, `visual_tracker_3d.py`, `gazebo_sitl_tracker.py`) require physical or simulated flight hardware and are instead validated through the manual field sequence in [`docs/quick_start.md`](docs/quick_start.md).
 
 ## ⚙️ Model Deployment (TensorRT Export)
 

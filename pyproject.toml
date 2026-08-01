@@ -27,11 +27,18 @@ addopts = "-ra"
 [tool.ruff]
 line-length = 100
 src = ["src"]
-exclude = [
-    "src/test_yaw.py",
-    "src/test_3d_tracker.py",
-    "src/main.py"
-]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# These onboard/simulation scripts call gi.require_version() before importing
+# gi.repository (E402), and their GStreamer pipeline-wiring sections use
+# semicolon-joined statements and some long lines for readability (E702, E501).
+# None of these are correctness issues. F821 (undefined names), F401/F841
+# (unused imports/variables), and syntax errors are still linted normally --
+# these are the actual bug classes CI needs to catch (see the frame_bgr
+# NameError this previously let through when the files were fully excluded).
+"src/yaw_tracker.py" = ["E402", "E501", "E702"]
+"src/visual_tracker_3d.py" = ["E402", "E501", "E702"]
+"src/gazebo_sitl_tracker.py" = ["E402", "E501", "E702"]

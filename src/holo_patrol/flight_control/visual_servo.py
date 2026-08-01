@@ -13,12 +13,13 @@ or a camera attached.
 The default parameter values below are copied exactly from the
 onboard scripts:
 
-- Yaw parameters match both ``test_yaw.py`` and ``test_3d_tracker.py``.
+- Yaw parameters match both ``yaw_tracker.py`` and ``visual_tracker_3d.py``.
 - Forward/vertical parameters and the altitude floor match
-  ``test_3d_tracker.py`` specifically (``test_yaw.py`` never computes
-  or sends non-zero forward/down commands — see
+  ``visual_tracker_3d.py`` specifically (``yaw_tracker.py`` never
+  computes or sends non-zero forward/down commands — see
   ``VisualServoController(enable_translation=False)`` below).
 """
+import math
 from dataclasses import dataclass
 
 
@@ -30,11 +31,11 @@ def _clamp(value: float, lower: float, upper: float) -> float:
 class VisualServoConfig:
     """Tunable control-law parameters.
 
-    Defaults match ``test_3d_tracker.py`` exactly (see
+    Defaults match ``visual_tracker_3d.py`` exactly (see
     ``docs/visual_servoing.md``, Sections 4 and 5). Construct a custom
     ``VisualServoConfig`` to reproduce the Gazebo prototype's
-    (``main.py``) different gains and limits if needed for comparison
-    or simulation work.
+    (``gazebo_sitl_tracker.py``) different gains and limits if needed
+    for comparison or simulation work.
     """
     image_width: int = 1280
     image_height: int = 720
@@ -84,10 +85,10 @@ class VelocitySetpoint:
 class VisualServoController:
     """Implements the control law from docs/visual_servoing.md.
 
-    Set ``enable_translation=False`` to reproduce ``test_yaw.py``'s
+    Set ``enable_translation=False`` to reproduce ``yaw_tracker.py``'s
     behavior exactly: yaw is computed and commanded, while forward and
     down are always forced to zero. Leave it ``True`` (default) to
-    reproduce ``test_3d_tracker.py``.
+    reproduce ``visual_tracker_3d.py``.
     """
 
     def __init__(self, config: VisualServoConfig = None, enable_translation: bool = True):
@@ -119,7 +120,14 @@ class VisualServoController:
         """Blocks further AI-commanded descent once the safety floor is
         reached, per docs/visual_servoing.md Section 5.4. Climb
         (negative ``down_speed``) is never blocked by this rule.
+
+        A NaN altitude reading is treated as unknown/at-the-floor and
+        also blocks descent: ``float('nan') <= x`` is always ``False``
+        in Python, so without this explicit check a corrupted telemetry
+        sample would silently bypass the safety floor below.
         """
+        if math.isnan(relative_altitude_m):
+            return 0.0 if down_speed > 0 else down_speed
         if relative_altitude_m <= self.config.min_safe_altitude_m and down_speed > 0:
             return 0.0
         return down_speed

@@ -9,7 +9,7 @@ This model card follows the format popularized by Google's [Model Cards for Mode
 | | |
 |---|---|
 | **Project** | HOLO-PATROL — Autonomous Security Patrol Drone |
-| **Developers** | Kesgin, M. C.; Karaca, M. A.; Küçükkayalar, D.; Ayaz, E. D.; Yencilek, S. |
+| **Developers** | Kesgin, M. C.; Karaca, M. A.; Küçükkayalar, D.; Ayaz, E. D. |
 | **Institution** | Başkent University, Department of Computer Engineering |
 | **Model date** | 2026 (Bachelor's Thesis) |
 | **Model type** | Composite pipeline: real-time object detector + face embedding verifier |
@@ -81,7 +81,8 @@ Factors observed to affect model behavior, based on baseline and field evaluatio
 
 | Metric | Value |
 |---|---|
-| Average onboard inference speed | 14.50 FPS (~69–145 ms/frame depending on measurement point) |
+| YOLOv8n inference throughput (Jetson Nano) | 14.5 FPS |
+| Mean inference interval | ~69 ms |
 | Combined human-detection + face-verification accuracy | 88% |
 | False positive rate (field) | 8% |
 | End-to-end detection → mobile push-notification latency | ~0.8 s |

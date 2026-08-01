@@ -8,8 +8,7 @@ HOLO-PATROL uses image-based visual servoing. The controller does not reconstruc
 
 The term **3D tracking** in this project refers to control over these three motion components derived from a single 2D bounding box, not full 3D pose estimation.
 
-<!-- PHOTO: Add an annotated frame here showing the bounding box, center point, and image-space errors -->
-![Visual Servoing Error Diagram](../media/visual_servoing_errors.svg)
+*[Visual Servoing Error Diagram — media not included in this distribution]*
 
 ## 1. Development Stages
 
@@ -17,11 +16,11 @@ The controller evolved through three implementations, in this order:
 
 | Implementation | Environment | Controlled motion |
 |---|---|---|
-| `main.py` | Gazebo / PX4 SITL (early software validation) | Yaw, forward/backward, rule-based altitude band |
-| `test_yaw.py` | Physical UAV | Yaw only |
-| `test_3d_tracker.py` | Physical UAV | Yaw, forward/backward, vertical velocity |
+| `gazebo_sitl_tracker.py` | Gazebo / PX4 SITL (early software validation) | Yaw, forward/backward, rule-based altitude band |
+| `yaw_tracker.py` | Physical UAV | Yaw only |
+| `visual_tracker_3d.py` | Physical UAV | Yaw, forward/backward, vertical velocity |
 
-The Gazebo prototype (`main.py`) was used purely to validate the event flow — detection, mode switching, target following, and Firebase alerting — in software, before any of it was flown. It is described only briefly in Section 8 for context; the two real-flight scripts are the primary subject of this document.
+The Gazebo prototype (`gazebo_sitl_tracker.py`) was used purely to validate the event flow — detection, mode switching, target following, and Firebase alerting — in software, before any of it was flown. It is described only briefly in Section 8 for context; the two real-flight scripts are the primary subject of this document.
 
 ## 2. Perception Output (Real-Flight Pipeline)
 
@@ -60,7 +59,7 @@ Convention used throughout the project:
 
 All values sent are velocity setpoints; the AI application never issues low-level motor or attitude commands directly.
 
-## 4. Yaw-Only Controller (`test_yaw.py`)
+## 4. Yaw-Only Controller (`yaw_tracker.py`)
 
 Horizontal image error:
 
@@ -71,7 +70,7 @@ error_x = person_center_x - IMAGE_CENTER_X
 Parameters actually used in the script:
 
 ```text
-horizontal dead zone (OLU_BOLGE_X) = 40 pixels
+horizontal dead zone (DEAD_ZONE_X) = 40 pixels
 yaw gain (YAW_K)                   = 0.035
 yaw-rate limit (MAX_YAW_DEG_SEC)   = ±30 deg/s
 ```
@@ -91,7 +90,7 @@ VelocityBodyYawspeed(0.0, 0.0, 0.0, yaw_speed)
 
 The control loop runs on a `0.05` s cycle (~20 Hz), independent of camera capture or inference rate — it simply reads the latest error published by the DeepStream probe on each iteration.
 
-## 5. Full Onboard Controller (`test_3d_tracker.py`)
+## 5. Full Onboard Controller (`visual_tracker_3d.py`)
 
 This controller regulates three independent image-space errors every ~20 Hz cycle.
 
@@ -102,7 +101,7 @@ Identical logic and gain to the yaw-only stage:
 ```text
 error_x = person_center_x - IMAGE_CENTER_X
 
-yaw_speed = 0.0                                  when |error_x| < 40   (OLU_BOLGE_X)
+yaw_speed = 0.0                                  when |error_x| < 40   (DEAD_ZONE_X)
 yaw_speed = clamp(error_x * 0.035, -30.0, 30.0)   otherwise            (YAW_K, limit ±30 deg/s)
 ```
 
@@ -115,7 +114,7 @@ error_distance = TARGET_BOX_HEIGHT - person_height     # TARGET_BOX_HEIGHT = 300
 ```
 
 ```text
-forward_speed = 0.0                                            when |error_distance| < 30   (OLU_BOLGE_MESAFE)
+forward_speed = 0.0                                            when |error_distance| < 30   (DEAD_ZONE_DISTANCE)
 forward_speed = clamp(error_distance * 0.018, -1.0, 1.5)        otherwise                    (FORWARD_K, +1.5 / -1.0 m/s limits)
 ```
 
@@ -128,7 +127,7 @@ error_y = person_center_y - IMAGE_CENTER_Y
 ```
 
 ```text
-down_speed = 0.0                                    when |error_y| < 35    (OLU_BOLGE_Y)
+down_speed = 0.0                                    when |error_y| < 35    (DEAD_ZONE_Y)
 down_speed = clamp(error_y * 0.008, -0.5, 0.5)       otherwise             (DOWN_K, ±0.5 m/s limit)
 ```
 
@@ -147,8 +146,7 @@ if global_altitude <= 3.0 and down_speed > 0:
 
 This blocks any additional AI-commanded descent once the 3-meter floor is reached. It supplements — and does not replace — PX4's own altitude, geofence, battery, and link-loss failsafes.
 
-<!-- PHOTO: Add a photo or diagram of the drone approaching the minimum-altitude boundary during a real test -->
-![Minimum Altitude Test](../media/tracking_test.gif)
+*[Minimum Altitude Test — media not included in this distribution]*
 
 ## 6. Target Selection and Loss Behavior
 
@@ -172,11 +170,11 @@ Before calling `drone.offboard.start()`, both scripts first stream **ten** zero-
 
 The moment the operator switches out of Offboard mode, the internal flag is cleared, autonomous commands stop, and control returns fully to the pilot — making the RC flight-mode switch the primary human override in both real-flight stages.
 
-## 8. Earlier Software Validation: Gazebo Prototype (`main.py`)
+## 8. Earlier Software Validation: Gazebo Prototype (`gazebo_sitl_tracker.py`)
 
-Before either real-flight script existed, the same overall concept was exercised in Gazebo / PX4 SITL using `main.py`. This prototype was intentionally more experimental and used different parameters, a different detector, and a simpler altitude strategy:
+Before either real-flight script existed, the same overall concept was exercised in Gazebo / PX4 SITL using `gazebo_sitl_tracker.py`. This prototype was intentionally more experimental and used different parameters, a different detector, and a simpler altitude strategy:
 
-| Parameter | Gazebo prototype (`main.py`) | Real-flight tracker (`test_3d_tracker.py`) |
+| Parameter | Gazebo prototype (`gazebo_sitl_tracker.py`) | Real-flight tracker (`visual_tracker_3d.py`) |
 |---|---:|---:|
 | Frame size | `640 × 480` | `1280 × 720` |
 | Detector | YOLOv8s via Ultralytics, confidence threshold `0.62` in Python | YOLOv8 via DeepStream/TensorRT, threshold set externally |
@@ -193,8 +191,7 @@ Before either real-flight script existed, the same overall concept was exercised
 
 The most important behavioral difference: the Gazebo prototype takes control automatically the instant a person is detected, whereas both real-flight scripts always wait for explicit operator authorization before issuing any autonomous command. This change was a deliberate safety decision made between the simulation stage and real flight testing.
 
-<!-- PHOTO: Add a screenshot of the Gazebo simulation's tracking behavior here, for comparison with the real-flight photos above -->
-![Gazebo Prototype Tracking](../media/gazebo_simulation_environment.gif)
+*[Gazebo Prototype Tracking — media not included in this distribution]*
 
 ## 9. Runtime Flow (Real-Flight Pipeline)
 

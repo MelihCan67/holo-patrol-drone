@@ -1,11 +1,10 @@
 # Software Environment and Runtime Configuration
 
-This document describes the software environment actually used to run HOLO-PATROL's real-flight controllers (`test_yaw.py` and `test_3d_tracker.py`) on the Jetson Nano. The repository focuses on system design and control logic; private credentials, trained model binaries, and full deployment-specific configuration files are not distributed.
+This document describes the software environment actually used to run HOLO-PATROL's real-flight controllers (`yaw_tracker.py` and `visual_tracker_3d.py`) on the Jetson Nano. The repository focuses on system design and control logic; private credentials, trained model binaries, and full deployment-specific configuration files are not distributed.
 
-An earlier, separate software environment — a Gazebo / PX4 SITL simulation running `main.py` — was used to validate the same conceptual event flow before real flight. It is noted briefly in Section 5 for context; it is not the deployment target described in the rest of this document.
+An earlier, separate software environment — a Gazebo / PX4 SITL simulation running `gazebo_sitl_tracker.py` — was used to validate the same conceptual event flow before real flight. It is noted briefly in Section 5 for context; it is not the deployment target described in the rest of this document.
 
-<!-- PHOTO: Add a photo of the Jetson Nano + camera + Pixhawk assembly as physically wired for these tests -->
-![Onboard Hardware Assembly](../media/onboard_assembly.jpeg)
+*[Onboard Hardware Assembly — media not included in this distribution]*
 
 ## 1. Target Environment
 
@@ -23,26 +22,33 @@ Both real-flight scripts run directly on the **NVIDIA Jetson Nano** mounted on t
 
 ## 2. Software Stack (Onboard)
 
-The onboard implementation, as written in `test_yaw.py` and `test_3d_tracker.py`, depends on:
+The onboard implementation, as written in `yaw_tracker.py` and `visual_tracker_3d.py`, depends on:
 
 - NVIDIA JetPack-compatible CUDA, TensorRT, and GStreamer components
 - NVIDIA DeepStream SDK and its Python bindings (`pyds`)
 - Python GObject bindings (`gi`, `Gst`, `GLib`)
-- OpenCV (`cv2`) and NumPy — used in `test_3d_tracker.py`'s probe for frame handling
+- OpenCV (`cv2`) and NumPy — used in `visual_tracker_3d.py`'s probe for frame handling
 - `mavsdk` (Python) — specifically `mavsdk.System` and `mavsdk.offboard.VelocityBodyYawspeed` / `OffboardError`
 - `firebase_admin` (`credentials`, `firestore`, `storage`)
 - Standard library: `asyncio`, `threading`, `time`, `sys`, `datetime`
 
-Exact package and JetPack/DeepStream versions should be recorded from the actual flight device rather than assumed from a desktop environment:
+Exact package and JetPack/DeepStream versions should be recorded from the actual flight device rather than assumed from a desktop environment. These were not recorded during the final field deployment; run the commands below on the Jetson to collect them for your own deployment:
+
+```bash
+python3 --version
+deepstream-app --version-all
+head -n 1 /etc/nv_tegra_release
+pip3 show mavsdk
+```
 
 | Component | Tested version |
 |---|---|
-| JetPack / L4T | `ADD_FINAL_DEVICE_VERSION` |
-| DeepStream SDK | `ADD_FINAL_DEVICE_VERSION` |
-| TensorRT | `ADD_FINAL_DEVICE_VERSION` |
-| Python | `ADD_FINAL_DEVICE_VERSION` |
-| PX4 firmware | `ADD_FINAL_DEVICE_VERSION` |
-| MAVSDK-Python | `ADD_FINAL_DEVICE_VERSION` |
+| JetPack / L4T | Not recorded during the final field deployment |
+| DeepStream SDK | Not recorded during the final field deployment |
+| TensorRT | Not recorded during the final field deployment |
+| Python | Not recorded during the final field deployment |
+| PX4 firmware | Not recorded during the final field deployment |
+| MAVSDK-Python | Not recorded during the final field deployment |
 
 ## 3. Required Runtime Assets
 
@@ -52,8 +58,8 @@ Both onboard scripts reference the same set of external assets, none of which ar
 project/
 ├── config_infer_primary_yoloV8.txt     # DeepStream nvinfer config (model, labels, confidence threshold)
 ├── firebase_key.json                   # Private service-account credential — never commit this
-├── test_yaw.py
-└── test_3d_tracker.py
+├── yaw_tracker.py
+└── visual_tracker_3d.py
 ```
 
 The DeepStream tracker element additionally loads NVIDIA's shipped IOU tracker library and config directly from the standard DeepStream installation path:
@@ -82,14 +88,13 @@ nvarguscamerasrc → nvstreammux (1280×720, batch-size 1, live-source) → nvin
 The `udpsink` element streams the annotated, encoded video to a ground-station IP passed as the script's first command-line argument, on **UDP port 5000**:
 
 ```bash
-python3 test_yaw.py <GROUND_STATION_IP>
-python3 test_3d_tracker.py <GROUND_STATION_IP>
+python3 src/yaw_tracker.py <GROUND_STATION_IP>
+python3 src/visual_tracker_3d.py <GROUND_STATION_IP>
 ```
 
 A compatible RTP/H.264 receiver must be listening on that IP and port for the operator to see the live feed. The detection probe itself is attached to the `nvdsosd` sink pad via `add_probe`, so all target-error extraction happens on the same buffer that gets drawn and streamed.
 
-<!-- PHOTO: Add a screenshot of the ground-station receiver showing the live annotated RTP stream -->
-![Ground Station Live Feed](../media/ground_station_feed.gif)
+*[Ground Station Live Feed — media not included in this distribution]*
 
 ## 5. Vehicle Communication
 
@@ -102,7 +107,7 @@ serial:///dev/ttyTHS1:115200
 This link is used to:
 
 - read the current flight mode (to detect `OFFBOARD` / `GUIDED`),
-- read relative altitude (`test_3d_tracker.py` only, via `monitor_telemetry`),
+- read relative altitude (`visual_tracker_3d.py` only, via `monitor_telemetry`),
 - start MAVSDK Offboard control,
 - stream body-frame velocity and yaw-rate setpoints.
 
@@ -133,17 +138,9 @@ isActive
 confidence
 ```
 
-The alert image is uploaded to Cloud Storage and a signed URL (valid 1825 days) is generated for `imageURL`. Alert uploads run in a background thread (`threading.Thread(target=send_alert_to_firebase, ...)`) so that network activity never blocks the ~20 Hz flight-control loop, and a **15-second cooldown** (`ALERT_SAVE_COOLDOWN`) prevents uploading a new image on every processed frame.
+The alert image is uploaded to Cloud Storage and a signed URL (valid 7 days) is generated for `imageURL`; deployments should pair this with an explicit Cloud Storage lifecycle/retention policy on the bucket, since the URL expiring does not delete the underlying object. Alert uploads run in a background thread (`threading.Thread(target=send_alert_to_firebase, ...)`) so that network activity never blocks the ~20 Hz flight-control loop, and a **15-second cooldown** (`ALERT_SAVE_COOLDOWN`) prevents uploading a new image on every processed frame.
 
-Recommended `.gitignore` entries:
-
-```gitignore
-firebase_key.json
-*.engine
-__pycache__/
-*.pyc
-/tmp/
-```
+This repository's root [`.gitignore`](../.gitignore) already excludes `firebase_key.json`, exported model artifacts (`*.engine`, `*.pt`, `*.onnx`), and standard Python/tooling caches.
 
 ## 7. Configuration Checklist Before Deployment
 
@@ -162,7 +159,7 @@ Before running either onboard script, verify:
 
 ## 8. For Reference: Earlier Gazebo / PX4 SITL Environment
 
-Before the onboard scripts above were written, the same high-level event flow (detect → hold → Offboard → follow → alert) was validated in software using `main.py`, which connected to a simulated vehicle over `udpin://127.0.0.1:14540`, read frames from a Gazebo camera stream via OpenCV/GStreamer, and ran detection with Ultralytics YOLOv8s instead of DeepStream. This simulation environment is mentioned here only for context on how the project's control logic was first proven out — it is not part of the onboard deployment path documented above, and its full setup is intentionally not detailed in this file.
+Before the onboard scripts above were written, the same high-level event flow (detect → hold → Offboard → follow → alert) was validated in software using `gazebo_sitl_tracker.py`, which connected to a simulated vehicle over `udpin://127.0.0.1:14540`, read frames from a Gazebo camera stream via OpenCV/GStreamer, and ran detection with Ultralytics YOLOv8s instead of DeepStream. This simulation environment is mentioned here only for context on how the project's control logic was first proven out — it is not part of the onboard deployment path documented above, and its full setup is intentionally not detailed in this file.
 
 ## 9. Documentation Scope
 

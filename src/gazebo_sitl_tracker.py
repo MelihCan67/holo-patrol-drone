@@ -2,7 +2,7 @@ import asyncio
 import os
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import cv2
 import firebase_admin
@@ -10,6 +10,19 @@ from firebase_admin import credentials, firestore, storage
 from mavsdk import System
 from mavsdk.offboard import VelocityBodyYawspeed
 from ultralytics import YOLO
+
+from holo_patrol.cloud.alerts import EVIDENCE_URL_TTL_DAYS
+from holo_patrol.flight_control.visual_servo import VisualServoConfig, VisualServoController
+
+# NOTE: This script is a Gazebo/PX4 SITL simulation prototype only. It predates
+# the tested holo_patrol.flight_control.visual_servo altitude-protection logic
+# (see §3.2 below) and must NOT be used to fly a real vehicle as-is.
+
+# Only the (tested) NaN/at-the-floor descent guard from VisualServoController is reused
+# here -- the bang-bang dive/climb thresholds below are this prototype's own design and
+# are kept as-is so the Gazebo-vs-real-flight comparison in docs/visual_servoing.md §8
+# still holds. min_safe_altitude_m matches this script's own "climb back up" threshold.
+_altitude_guard = VisualServoController(config=VisualServoConfig(min_safe_altitude_m=3.5))
 
 # --- FIREBASE CONFIGURATION ---
 try:
@@ -35,14 +48,18 @@ def process_and_upload_alert(frame_copy, confidence):
 
         blob = bucket.blob(f"alert_images/{timestamp_str}.jpg")
         blob.upload_from_filename(local_path)
-        blob.make_public()
+        # Signed, time-limited URL instead of a permanently public one -- evidence
+        # images should not be indefinitely accessible to anyone with the link.
+        url = blob.generate_signed_url(
+            expiration=datetime.now() + timedelta(days=EVIDENCE_URL_TTL_DAYS)
+        )
 
         db.collection('alerts').document().set({
             "title": "Suspect Tracking Initiated",
             "message": "Drone detected a suspect and started tracking!",
             "isActive": True,
             "timestamp": firestore.SERVER_TIMESTAMP,
-            "imageURL": blob.public_url,
+            "imageURL": url,
             "confidence": float(confidence)
         })
         print("✅ Tracking Alert sent to the mobile app!")
@@ -67,14 +84,20 @@ async def run():
             print("✅ Successfully connected to the drone!")
             break
 
-    # --- NEW: ALTITUDE TRACKING RADAR ---
-    # Async task that continuously reads the real-time altitude of the drone in the background
-    drone_altitude = 10.0
+    # --- ALTITUDE TRACKING RADAR ---
+    # Async task that continuously reads the real-time altitude of the drone in the background.
+    # Altitude is unknown until the first valid telemetry sample arrives. Do NOT assume a
+    # safe default value here: an assumed altitude that is wrong (e.g. the drone is actually
+    # much lower than assumed) could let a descent command through the safety floor below --
+    # see the same pattern in visual_tracker_3d.py.
+    drone_altitude = None
+    altitude_valid = False
 
     async def monitor_altitude():
-        nonlocal drone_altitude
+        nonlocal drone_altitude, altitude_valid
         async for position in drone.telemetry.position():
             drone_altitude = position.relative_altitude_m
+            altitude_valid = True
 
     # Start the altitude radar in the background
     asyncio.create_task(monitor_altitude())
@@ -168,18 +191,32 @@ async def run():
                 else:
                     forward_speed = error_y * FORWARD_K
 
-                # --- NEW: DIVE (ALTITUDE) CONTROL ---
-                down_speed = 0.0
-                if drone_altitude > 4.5:
-                    down_speed = 1.0  # Glide down at 1 m/s (Dive)
-                elif drone_altitude < 3.5:
-                    down_speed = -0.5 # Gently pull up nose if dropped below 3.5 meters
+                # --- DIVE (ALTITUDE) CONTROL ---
+                if not altitude_valid:
+                    # Altitude telemetry hasn't arrived yet -- do not assume it is
+                    # safe to dive. Hold vertical position instead of guessing.
+                    down_speed = 0.0
+                else:
+                    down_speed = 0.0
+                    if drone_altitude > 4.5:
+                        down_speed = 1.0  # Glide down at 1 m/s (Dive)
+                    elif drone_altitude < 3.5:
+                        down_speed = -0.5  # Gently pull up nose if dropped below 3.5 meters
+
+                # Defense-in-depth: reuse the tested floor/NaN guard even though the
+                # thresholds above already respect it, and to safely handle a
+                # corrupted (NaN) telemetry sample.
+                down_speed = _altitude_guard.apply_altitude_protection(
+                    down_speed,
+                    relative_altitude_m=drone_altitude if altitude_valid else float("nan"),
+                )
 
                 # EXPANDED LIMITS (For Faster Tracking)
                 forward_speed = max(min(forward_speed, 3.0), -0.5)  # Max speed increased to 3.0 m/s (~11 km/h)
                 yaw_speed = max(min(yaw_speed, 20.0), -20.0)
 
-                print(f"🎯 LOCK: Speed={forward_speed:.2f} m/s | Altitude={drone_altitude:.1f} m | Dive={down_speed:.1f} m/s")
+                altitude_label = f"{drone_altitude:.1f} m" if altitude_valid else "N/A"
+                print(f"🎯 LOCK: Speed={forward_speed:.2f} m/s | Altitude={altitude_label} | Dive={down_speed:.1f} m/s")
 
                 # Send command to drone: Forward, Yaw (turn), and Downward speed
                 await drone.offboard.set_velocity_body(

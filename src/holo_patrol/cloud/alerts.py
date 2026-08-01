@@ -6,10 +6,19 @@ decoupled from the Firebase Admin SDK itself so it can be unit-tested
 without cloud credentials or network access.
 
 Mirrors ``ALERT_SAVE_COOLDOWN`` and the Firestore document fields
-written by ``send_alert_to_firebase`` in ``test_yaw.py`` /
-``test_3d_tracker.py`` (see docs/software_setup.md, Section 6).
+written by ``send_alert_to_firebase`` in ``yaw_tracker.py`` /
+``visual_tracker_3d.py`` (see docs/software_setup.md, Section 6).
 """
 from dataclasses import dataclass, field
+from typing import Optional
+
+# Single source of truth for how long an evidence-image signed URL stays valid.
+# Keep this short and pair it with an explicit Cloud Storage lifecycle/retention
+# policy on the bucket itself -- a multi-year signed URL outlives any reasonable
+# evidence-retention window and, if leaked, grants long-lived access to the image.
+# Both onboard scripts (yaw_tracker.py, visual_tracker_3d.py) import this constant
+# instead of hardcoding their own expiration window.
+EVIDENCE_URL_TTL_DAYS = 7
 
 
 @dataclass
@@ -20,15 +29,38 @@ class AlertThrottle:
     onboard. Call ``should_send(now)`` before triggering an upload,
     and ``mark_sent(now)`` immediately after a successful upload is
     kicked off.
+
+    Optionally pass a ``track_id`` to both calls to additionally apply
+    a longer, per-track cooldown (``same_track_cooldown_s``, default
+    4x ``cooldown_s``) on top of the global one. `track_id` continuity
+    isn't guaranteed by the onboard IOU tracker (see
+    docs/visual_servoing.md, Section 6) -- if the same physical target
+    keeps re-appearing under a new ID, the global cooldown alone would
+    still fire a fresh "critical" alert on every re-identification.
+    Passing `track_id` catches the common case where the *same* ID
+    reappears quickly, without changing behavior for callers that
+    don't pass it.
     """
     cooldown_s: float = 15.0
+    same_track_cooldown_s: Optional[float] = None
     _last_sent: float = field(default=float("-inf"), repr=False)
+    _last_sent_by_track: dict = field(default_factory=dict, repr=False)
 
-    def should_send(self, now: float) -> bool:
+    def __post_init__(self) -> None:
+        if self.same_track_cooldown_s is None:
+            self.same_track_cooldown_s = self.cooldown_s * 4
+
+    def should_send(self, now: float, track_id: Optional[int] = None) -> bool:
+        if track_id is not None:
+            last_for_track = self._last_sent_by_track.get(track_id, float("-inf"))
+            if (now - last_for_track) <= self.same_track_cooldown_s:
+                return False
         return (now - self._last_sent) > self.cooldown_s
 
-    def mark_sent(self, now: float) -> None:
+    def mark_sent(self, now: float, track_id: Optional[int] = None) -> None:
         self._last_sent = now
+        if track_id is not None:
+            self._last_sent_by_track[track_id] = now
 
 
 @dataclass(frozen=True)
